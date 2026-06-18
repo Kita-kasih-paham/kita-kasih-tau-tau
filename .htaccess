@@ -1,0 +1,16 @@
+RewriteEngine On
+
+# ── Block direct access to all private directories ──────────────────────────
+# Only assets/ and index.php are meant to be publicly reachable.
+RewriteRule ^(config|controllers|core|middleware|models|pages|routes|shared)(/|$) - [F,L]
+
+# ── Block sensitive files in the root ───────────────────────────────────────
+<FilesMatch "^(\.env|database\.sql|.*\.zip)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ── Route everything else through index.php (front controller) ───────────────
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

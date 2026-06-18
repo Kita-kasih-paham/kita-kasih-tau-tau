@@ -1,0 +1,69 @@
+/* ── DataTables shared styles ── */
+.dataTables_wrapper {
+  overflow: visible !important;
+}
+
+.dataTables_length select {
+  font-family: "Inter", sans-serif;
+  font-size: 0.82rem;
+  border: 1px solid #dde3ea;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none !important;
+  color: #1a2332;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+  font-family: "Inter", sans-serif;
+  font-size: 0.82rem;
+  border: 1px solid #dde3ea;
+  border-radius: 6px;
+  padding: 0.28rem 0.65rem;
+  color: #1a2332;
+  outline: none;
+}
+.dataTables_wrapper .dataTables_filter input:focus {
+  border-color: #0f6cbd;
+  box-shadow: 0 0 0 3px rgba(15, 108, 189, 0.1);
+}
+
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_length label,
+.dataTables_wrapper .dataTables_filter label {
+  font-size: 0.8rem;
+  color: #6b7a8d;
+  margin: 0;
+}
+
+/* ── Pagination fix — override Bootstrap's large .page-link ── */
+.dataTables_wrapper .pagination {
+  margin: 0;
+  gap: 2px;
+}
+.dataTables_wrapper .page-item .page-link {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.55rem;
+  line-height: 1.4;
+  border-radius: 5px !important;
+  color: #0f6cbd;
+  border: 1px solid #dde3ea;
+  background: #fff;
+  min-width: unset;
+  min-height: unset;
+}
+.dataTables_wrapper .page-item .page-link:hover {
+  background: #e8f3fc;
+  border-color: #0f6cbd;
+}
+.dataTables_wrapper .page-item.active .page-link {
+  background: #0f6cbd;
+  border-color: #0f6cbd;
+  color: #fff;
+}
+.dataTables_wrapper .page-item.disabled .page-link {
+  color: #adb5bd;
+  background: #f8fafc;
+  border-color: #dde3ea;
+}
