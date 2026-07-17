@@ -12,20 +12,20 @@ ob_start();
             <div class="card-body p-4">
                 <form action="/stok-masuk/<?= $stokMasuk['id'] ?>/update" method="POST">
                     <div class="mb-3">
-                        <label class="form-label">Barang</label>
-                        <select name="barang_id" id="barangSelect"
-                            class="form-select <?= isset($errors['barang_id']) ? 'is-invalid' : '' ?>" required>
-                            <option value="">-- Pilih Barang --</option>
-                            <?php foreach ($barang as $b): ?>
-                                <?php $selected = ($old['barang_id'] ?? $stokMasuk['barang_id']) == $b['id'] ? 'selected' : ''; ?>
+                        <label class="form-label">Bahan Baku</label>
+                        <select name="bahan_baku_id" id="bahanBakuSelect"
+                            class="form-select <?= isset($errors['bahan_baku_id']) ? 'is-invalid' : '' ?>" required>
+                            <option value="">-- Pilih Bahan Baku --</option>
+                            <?php foreach ($bahanBaku as $b): ?>
+                                <?php $selected = ($old['bahan_baku_id'] ?? $stokMasuk['bahan_baku_id']) == $b['id'] ? 'selected' : ''; ?>
                                 <option value="<?= $b['id'] ?>" data-satuan="<?= htmlspecialchars($b['satuan']) ?>"
                                     <?= $selected ?>>
-                                    <?= htmlspecialchars($b['kode_barang'] . ' — ' . $b['nama_barang']) ?>
+                                    <?= htmlspecialchars($b['kode_bahan'] . ' — ' . $b['nama_bahan']) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <?php if (isset($errors['barang_id'])): ?>
-                            <div class="invalid-feedback"><?= $errors['barang_id'][0] ?></div>
+                        <?php if (isset($errors['bahan_baku_id'])): ?>
+                            <div class="invalid-feedback"><?= $errors['bahan_baku_id'][0] ?></div>
                         <?php endif; ?>
                     </div>
                     <div class="mb-3">
@@ -76,7 +76,7 @@ ob_start();
     document.addEventListener('DOMContentLoaded', function () {
         const displayInput = document.getElementById('jumlahDisplay');
         const hiddenInput = document.getElementById('jumlahHidden');
-        const barangSelect = document.getElementById('barangSelect');
+        const bahanBakuSelect = document.getElementById('bahanBakuSelect');
         const satuanText = document.getElementById('satuanText');
 
         // Format number with thousand separator
@@ -89,9 +89,9 @@ ob_start();
             return str.replace(/\./g, '');
         }
 
-        // Update satuan display when barang is selected
+        // Update satuan display when bahan baku is selected
         function updateSatuan() {
-            const selectedOption = barangSelect.options[barangSelect.selectedIndex];
+            const selectedOption = bahanBakuSelect.options[bahanBakuSelect.selectedIndex];
             if (selectedOption.value) {
                 const satuan = selectedOption.getAttribute('data-satuan');
                 satuanText.textContent = satuan || '-';
@@ -103,8 +103,8 @@ ob_start();
         // Initialize satuan on page load
         updateSatuan();
 
-        // Update satuan when barang selection changes
-        barangSelect.addEventListener('change', updateSatuan);
+        // Update satuan when bahan baku selection changes
+        bahanBakuSelect.addEventListener('change', updateSatuan);
 
         // Initialize with existing value if any
         if (displayInput.value) {

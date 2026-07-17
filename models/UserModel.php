@@ -21,4 +21,12 @@ class UserModel extends Model
         $stmt->execute([$username, $excludeId]);
         return (bool) $stmt->fetch();
     }
+
+    public function countByRole(string $role): int
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM users WHERE role = ?");
+        $stmt->execute([$role]);
+        $result = $stmt->fetch();
+        return (int) $result['count'];
+    }
 }

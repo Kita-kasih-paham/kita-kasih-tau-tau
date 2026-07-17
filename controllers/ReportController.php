@@ -33,6 +33,7 @@ class ReportController
 
         $masuk = (new StokMasukModel())->report(new \DateTime($from), new \DateTime($to));
         $keluar = (new StokKeluarModel())->report(new \DateTime($from), new \DateTime($to));
+        $produksi = (new StokKeluarModel())->reportProduksi(new \DateTime($from), new \DateTime($to));
 
         require __DIR__ . '/../pages/report/index.php';
     }
@@ -54,36 +55,38 @@ class ReportController
 
         // Stok Masuk sheet
         echo '<table border="1" cellpadding="4" cellspacing="0">';
-        echo '<tr><td colspan="4" style="font-weight:bold;font-size:14px;background:#d4edda">STOK MASUK — ' . $from . ' s/d ' . $to . '</td></tr>';
-        echo '<tr style="background:#c3e6cb;font-weight:bold"><td>#</td><td>Tanggal</td><td>Nama Barang</td><td>Jumlah</td></tr>';
+        echo '<tr><td colspan="5" style="font-weight:bold;font-size:14px;background:#d4edda">STOK MASUK — ' . $from . ' s/d ' . $to . '</td></tr>';
+        echo '<tr style="background:#c3e6cb;font-weight:bold"><td>#</td><td>Tanggal</td><td>Nama Bahan</td><td>Jumlah</td><td>Keterangan</td></tr>';
         foreach ($masuk as $i => $row) {
             echo '<tr>';
             echo '<td>' . ($i + 1) . '</td>';
             echo '<td>' . htmlspecialchars($row['tanggal']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['nama_barang']) . '</td>';
+            echo '<td>' . htmlspecialchars($row['nama_bahan']) . '</td>';
             echo '<td>' . number_format($row['jumlah'], 0, ',', '.') . '</td>';
+            echo '<td>' . htmlspecialchars($row['keterangan'] ?? '—') . '</td>';
             echo '</tr>';
         }
         $totalMasuk = array_sum(array_column($masuk, 'jumlah'));
-        echo '<tr style="font-weight:bold;background:#f0f0f0"><td colspan="3">Total</td><td>' . number_format($totalMasuk, 0, ',', '.') . '</td></tr>';
+        echo '<tr style="font-weight:bold;background:#f0f0f0"><td colspan="3">Total</td><td>' . number_format($totalMasuk, 0, ',', '.') . '</td><td></td></tr>';
         echo '</table>';
 
         echo '<br><br>';
 
         // Stok Keluar
         echo '<table border="1" cellpadding="4" cellspacing="0">';
-        echo '<tr><td colspan="4" style="font-weight:bold;font-size:14px;background:#f8d7da">STOK KELUAR — ' . $from . ' s/d ' . $to . '</td></tr>';
-        echo '<tr style="background:#f5c6cb;font-weight:bold"><td>#</td><td>Tanggal</td><td>Nama Barang</td><td>Jumlah</td></tr>';
+        echo '<tr><td colspan="5" style="font-weight:bold;font-size:14px;background:#f8d7da">STOK KELUAR — ' . $from . ' s/d ' . $to . '</td></tr>';
+        echo '<tr style="background:#f5c6cb;font-weight:bold"><td>#</td><td>Tanggal</td><td>Nama Bahan</td><td>Jumlah</td><td>Keterangan</td></tr>';
         foreach ($keluar as $i => $row) {
             echo '<tr>';
             echo '<td>' . ($i + 1) . '</td>';
             echo '<td>' . htmlspecialchars($row['tanggal']) . '</td>';
-            echo '<td>' . htmlspecialchars($row['nama_barang']) . '</td>';
+            echo '<td>' . htmlspecialchars($row['nama_bahan']) . '</td>';
             echo '<td>' . number_format($row['jumlah'], 0, ',', '.') . '</td>';
+            echo '<td>' . htmlspecialchars($row['keterangan'] ?? '—') . '</td>';
             echo '</tr>';
         }
         $totalKeluar = array_sum(array_column($keluar, 'jumlah'));
-        echo '<tr style="font-weight:bold;background:#f0f0f0"><td colspan="3">Total</td><td>' . number_format($totalKeluar, 0, ',', '.') . '</td></tr>';
+        echo '<tr style="font-weight:bold;background:#f0f0f0"><td colspan="3">Total</td><td>' . number_format($totalKeluar, 0, ',', '.') . '</td><td></td></tr>';
         echo '</table>';
 
         echo '</body></html>';
