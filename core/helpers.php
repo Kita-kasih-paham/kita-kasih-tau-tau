@@ -46,3 +46,31 @@ function fmtDate(string $date): string
         . $bulan[(int) date('n', $ts)] . ' '
         . date('Y', $ts);
 }
+
+/**
+ * Format datetime to Indonesian format with time
+ * e.g. 2026-04-17 14:30:00 → 17 Apr 2026, 14:30
+ */
+function fmtDateTime(string $datetime): string
+{
+    $bulan = [
+        1 => 'Jan',
+        2 => 'Feb',
+        3 => 'Mar',
+        4 => 'Apr',
+        5 => 'Mei',
+        6 => 'Jun',
+        7 => 'Jul',
+        8 => 'Agu',
+        9 => 'Sep',
+        10 => 'Okt',
+        11 => 'Nov',
+        12 => 'Des'
+    ];
+    $ts = strtotime($datetime);
+    if (!$ts)
+        return $datetime;
+    return (int) date('d', $ts) . ' '
+        . $bulan[(int) date('n', $ts)] . ' '
+        . date('Y, H:i', $ts);
+}

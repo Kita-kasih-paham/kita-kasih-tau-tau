@@ -103,9 +103,14 @@ ob_start();
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div></div>
-    <button type="button" class="btn btn-primary btn-sm" onclick="openTambah()">
-        <i class="bi bi-plus-lg me-1"></i> Tambah Stok Keluar
-    </button>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-success btn-sm" onclick="openTambahByProduk()">
+            <i class="bi bi-box-seam me-1"></i> Tambah by Produk
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openTambah()">
+            <i class="bi bi-plus-lg me-1"></i> Tambah Stok Keluar
+        </button>
+    </div>
 </div>
 
 <div class="card">
@@ -116,8 +121,9 @@ ob_start();
                     <th>#</th>
                     <th>Tanggal</th>
                     <th>Kode</th>
-                    <th>Nama Barang</th>
+                    <th>Nama Bahan</th>
                     <th>Jumlah</th>
+                    <th>Dibuat Oleh</th>
                     <th>Keterangan</th>
                     <th></th>
                 </tr>
@@ -127,9 +133,24 @@ ob_start();
                 <tr>
                     <td class="text-muted"><?= $i + 1 ?></td>
                     <td style="white-space:nowrap"><?= fmtDate($row['tanggal']) ?></td>
-                    <td><span class="badge bg-primary bg-opacity-10 text-primary"><?= htmlspecialchars($row['kode_barang']) ?></span></td>
-                    <td><?= htmlspecialchars($row['nama_barang']) ?></td>
-                    <td style="color:#e02424;font-weight:600"><?= fmt($row['jumlah']) ?></td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary"><?= htmlspecialchars($row['kode_bahan']) ?></span></td>
+                    <td><?= htmlspecialchars($row['nama_bahan']) ?></td>
+                    <td style="color:#e02424;font-weight:600"><?= fmt($row['jumlah']) ?> <span class="text-muted" style="font-size:0.82rem;font-weight:400"><?= htmlspecialchars($row['satuan']) ?></span></td>
+                    <td>
+                        <?php if (!empty($row['created_by'])): ?>
+                            <div style="font-size:0.875rem">
+                                <i class="bi bi-person-fill me-1" style="color:#6b7280;font-size:0.8rem"></i>
+                                <strong><?= htmlspecialchars($row['created_by']) ?></strong>
+                            </div>
+                            <?php if (!empty($row['created_at'])): ?>
+                                <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.1rem">
+                                    <?= fmtDateTime($row['created_at']) ?>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span class="text-muted" style="font-size:0.78rem">—</span>
+                        <?php endif; ?>
+                    </td>
                     <td class="text-muted"><?= $row['keterangan'] ? htmlspecialchars($row['keterangan']) : '<span style="font-size:0.78rem">—</span>' ?></td>
                     <td>
                         <div class="d-flex gap-1">
@@ -170,27 +191,27 @@ ob_start();
                 <div class="modal-body p-4">
 
                     <div class="mb-3">
-                        <label class="form-label">Barang</label>
-                        <select name="barang_id" id="t_barang_id"
-                            class="form-select <?= ($modalOpen === 'tambah' && isset($errors['barang_id'])) ? 'is-invalid' : '' ?>" required>
-                            <option value="">-- Pilih Barang --</option>
-                            <?php foreach ($barangWithStock as $b): ?>
+                        <label class="form-label">Bahan Baku</label>
+                        <select name="bahan_baku_id" id="t_bahan_baku_id"
+                            class="form-select <?= ($modalOpen === 'tambah' && isset($errors['bahan_baku_id'])) ? 'is-invalid' : '' ?>" required>
+                            <option value="">-- Pilih Bahan Baku --</option>
+                            <?php foreach ($bahanBakuWithStock as $b): ?>
                                 <option value="<?= $b['id'] ?>"
                                         data-stok="<?= (int)$b['stok_tersedia'] ?>"
                                         data-satuan="<?= htmlspecialchars($b['satuan']) ?>"
-                                        <?= ($modalOpen === 'tambah' && ($old['barang_id'] ?? '') == $b['id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($b['kode_barang'] . ' — ' . $b['nama_barang']) ?>
+                                        <?= ($modalOpen === 'tambah' && ($old['bahan_baku_id'] ?? '') == $b['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($b['kode_bahan'] . ' — ' . $b['nama_bahan']) ?>
                                     (stok: <?= (int)$b['stok_tersedia'] ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <?php if (empty($barangWithStock)): ?>
+                        <?php if (empty($bahanBakuWithStock)): ?>
                             <div class="form-text text-danger mt-1">
-                                <i class="bi bi-exclamation-circle me-1"></i>Tidak ada barang dengan stok tersedia.
+                                <i class="bi bi-exclamation-circle me-1"></i>Tidak ada bahan baku dengan stok tersedia.
                             </div>
                         <?php endif; ?>
-                        <?php if ($modalOpen === 'tambah' && isset($errors['barang_id'])): ?>
-                            <div class="invalid-feedback"><?= $errors['barang_id'][0] ?></div>
+                        <?php if ($modalOpen === 'tambah' && isset($errors['bahan_baku_id'])): ?>
+                            <div class="invalid-feedback"><?= $errors['bahan_baku_id'][0] ?></div>
                         <?php endif; ?>
                     </div>
 
@@ -265,21 +286,21 @@ ob_start();
                 <div class="modal-body p-4">
 
                     <div class="mb-3">
-                        <label class="form-label">Barang</label>
-                        <select name="barang_id" id="e_barang_id"
-                            class="form-select <?= ($modalOpen === 'edit' && isset($errors['barang_id'])) ? 'is-invalid' : '' ?>" required>
-                            <option value="">-- Pilih Barang --</option>
-                            <?php foreach ($barangForEdit as $b): ?>
+                        <label class="form-label">Bahan Baku</label>
+                        <select name="bahan_baku_id" id="e_bahan_baku_id"
+                            class="form-select <?= ($modalOpen === 'edit' && isset($errors['bahan_baku_id'])) ? 'is-invalid' : '' ?>" required>
+                            <option value="">-- Pilih Bahan Baku --</option>
+                            <?php foreach ($bahanBakuForEdit as $b): ?>
                                 <option value="<?= $b['id'] ?>"
                                         data-stok="<?= (int)$b['stok_tersedia'] ?>"
                                         data-satuan="<?= htmlspecialchars($b['satuan']) ?>">
-                                    <?= htmlspecialchars($b['kode_barang'] . ' — ' . $b['nama_barang']) ?>
+                                    <?= htmlspecialchars($b['kode_bahan'] . ' — ' . $b['nama_bahan']) ?>
                                     (stok: <?= (int)$b['stok_tersedia'] ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <?php if ($modalOpen === 'edit' && isset($errors['barang_id'])): ?>
-                            <div class="invalid-feedback"><?= $errors['barang_id'][0] ?></div>
+                        <?php if ($modalOpen === 'edit' && isset($errors['bahan_baku_id'])): ?>
+                            <div class="invalid-feedback"><?= $errors['bahan_baku_id'][0] ?></div>
                         <?php endif; ?>
                     </div>
 
@@ -340,11 +361,79 @@ ob_start();
     </div>
 </div>
 
+<!-- ===================== MODAL TAMBAH BY PRODUK ===================== -->
+<div class="modal fade" id="modalTambahByProduk" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header" style="border-bottom:1px solid #f0f0f0">
+                <h5 class="modal-title">
+                    <i class="bi bi-box-seam me-2 text-success"></i>Stok Keluar untuk Produksi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/stok-keluar/bulk" method="POST" id="formBulkKeluar">
+                <div class="modal-body p-4">
+
+                    <div class="mb-3">
+                        <label class="form-label">Pilih Produk</label>
+                        <select name="produk_id" id="produk_select_keluar" class="form-select" required>
+                            <option value="">-- Pilih Produk yang Diproduksi --</option>
+                            <?php foreach ($produks as $p): ?>
+                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nama_produk']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Jumlah Unit Produk</label>
+                        <div class="input-group">
+                            <input type="text" id="jumlah_produk_display" class="form-control" 
+                                   placeholder="Berapa unit produk yang diproduksi?" required>
+                            <span class="input-group-text" style="min-width:80px;background:#f3f4f6;color:#6b7280">
+                                <i class="bi bi-box-seam me-1"></i>unit
+                            </span>
+                        </div>
+                        <input type="hidden" name="jumlah_produk" id="jumlah_produk_hidden">
+                        <div class="form-text">Bahan yang dibutuhkan akan dihitung otomatis berdasarkan resep</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal Produksi</label>
+                        <input type="date" name="tanggal" id="bulk_tanggal_keluar" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Keterangan <span class="text-muted" style="font-size:0.78rem;font-weight:400">(opsional, otomatis dibuat jika kosong)</span> </label>
+                        <textarea name="keterangan" id="bulk_keterangan_keluar" class="form-control" rows="2" placeholder="Catatan produksi..."></textarea>
+                    </div>
+
+                    <div id="ingredient_container_keluar" style="display:none">
+                        <hr>
+                        <h6 class="mb-3"><i class="bi bi-list-check me-2"></i>Bahan yang Akan Digunakan</h6>
+                        <div id="ingredient_list_keluar" class="mb-3"></div>
+                        <div id="stock_warning" class="alert alert-danger" style="display:none">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Stok tidak mencukupi!</strong>
+                            <div id="stock_warning_list" class="mt-2"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #f0f0f0">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success" id="btn_save_bulk_keluar">
+                        <i class="bi bi-check-circle me-1"></i>Catat Stok Keluar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 function fmtNum(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 function parseNum(s) { return s.replace(/\./g, ''); }
 
-// ── Track current stok limits per modal ────────────────────
 let tMaxStok = 0; // tambah modal
 let eMaxStok = 0; // edit modal
 
@@ -464,7 +553,7 @@ function openTambah() {
     m.show();
     document.getElementById('modalTambah').addEventListener('shown.bs.modal', function() {
         initJumlah('t_jumlah_display', 't_jumlah_hidden', 't_jumlah_error', () => tMaxStok);
-        initStokInfo('t_barang_id', 't_satuanText', 't_satuanVal', 't_stokVal', 't_stokInfo', v => tMaxStok = v);
+        initStokInfo('t_bahan_baku_id', 't_satuanText', 't_satuanVal', 't_stokVal', 't_stokInfo', v => tMaxStok = v);
     }, { once: true });
 }
 
@@ -474,9 +563,9 @@ function openTambah() {
 function openEdit(id, row) {
     document.getElementById('editForm').action = '/stok-keluar/' + id + '/update';
 
-    const sel = document.getElementById('e_barang_id');
+    const sel = document.getElementById('e_bahan_baku_id');
     for (let i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].value == row.barang_id) { sel.selectedIndex = i; break; }
+        if (sel.options[i].value == row.bahan_baku_id) { sel.selectedIndex = i; break; }
     }
 
     const jd = document.getElementById('e_jumlah_display'), jh = document.getElementById('e_jumlah_hidden');
@@ -494,7 +583,7 @@ function openEdit(id, row) {
         eMaxStok = stokFromOption + originalJumlah;
 
         initJumlah('e_jumlah_display', 'e_jumlah_hidden', 'e_jumlah_error', () => eMaxStok);
-        initStokInfo('e_barang_id', 'e_satuanText', 'e_satuanVal', 'e_stokVal', 'e_stokInfo', v => {
+        initStokInfo('e_bahan_baku_id', 'e_satuanText', 'e_satuanVal', 'e_stokVal', 'e_stokInfo', v => {
             eMaxStok = v + originalJumlah;
             // Update stok display to show effective max
             const stokValEl = document.getElementById('e_stokVal');
@@ -502,6 +591,147 @@ function openEdit(id, row) {
         });
     }, { once: true });
 }
+
+// ── Tambah By Produk (Stok Keluar) ────────────────────────
+const produkDataKeluar = <?= json_encode(array_map(function($p) {
+    $ingredients = (new \Models\ProdukModel())->getIngredients($p['id']);
+    return [
+        'id' => $p['id'],
+        'nama' => $p['nama_produk'],
+        'ingredients' => array_map(function($ing) {
+            // Get current stock
+            $stokModel = new \Models\StokKeluarModel();
+            $stok = $stokModel->getStokTersedia($ing['bahan_baku_id']);
+            return [
+                'id' => $ing['bahan_baku_id'],
+                'nama' => $ing['nama_bahan'],
+                'kode' => $ing['kode_bahan'],
+                'satuan' => $ing['satuan'],
+                'jumlah_per_unit' => $ing['jumlah_dibutuhkan'],
+                'stok_tersedia' => $stok
+            ];
+        }, $ingredients)
+    ];
+}, $produks)) ?>;
+
+function openTambahByProduk() {
+    const modal = new bootstrap.Modal(document.getElementById('modalTambahByProduk'));
+    modal.show();
+    
+    // Reset form
+    document.getElementById('produk_select_keluar').value = '';
+    document.getElementById('jumlah_produk_display').value = '';
+    document.getElementById('jumlah_produk_hidden').value = '';
+    document.getElementById('ingredient_container_keluar').style.display = 'none';
+    document.getElementById('ingredient_list_keluar').innerHTML = '';
+    document.getElementById('stock_warning').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const produkSelectKeluar = document.getElementById('produk_select_keluar');
+    const jumlahProdukDisplay = document.getElementById('jumlah_produk_display');
+    const jumlahProdukHidden = document.getElementById('jumlah_produk_hidden');
+    const ingredientContainer = document.getElementById('ingredient_container_keluar');
+    const ingredientList = document.getElementById('ingredient_list_keluar');
+    const stockWarning = document.getElementById('stock_warning');
+    const stockWarningList = document.getElementById('stock_warning_list');
+    const btnSubmit = document.getElementById('btn_save_bulk_keluar');
+
+    // Format jumlah produk
+    if (jumlahProdukDisplay) {
+        jumlahProdukDisplay.addEventListener('input', function(e) {
+            const raw = parseNum(e.target.value.replace(/[^\d.]/g, ''));
+            jumlahProdukHidden.value = raw;
+            if (raw) {
+                const pos = e.target.selectionStart, ol = e.target.value.length;
+                e.target.value = fmtNum(raw);
+                const np = pos + (e.target.value.length - ol);
+                e.target.setSelectionRange(np, np);
+                updateIngredientCalculation();
+            } else {
+                e.target.value = '';
+                ingredientContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // Listen to produk selection
+    if (produkSelectKeluar) {
+        produkSelectKeluar.addEventListener('change', function() {
+            jumlahProdukDisplay.value = '';
+            jumlahProdukHidden.value = '';
+            ingredientContainer.style.display = 'none';
+            stockWarning.style.display = 'none';
+        });
+    }
+
+    function updateIngredientCalculation() {
+        const produkId = parseInt(produkSelectKeluar.value);
+        const jumlahProduk = parseFloat(jumlahProdukHidden.value);
+
+        if (!produkId || !jumlahProduk || jumlahProduk < 1) {
+            ingredientContainer.style.display = 'none';
+            return;
+        }
+
+        const produk = produkDataKeluar.find(p => p.id === produkId);
+        if (!produk || !produk.ingredients || produk.ingredients.length === 0) {
+            ingredientContainer.style.display = 'none';
+            return;
+        }
+
+        ingredientContainer.style.display = 'block';
+        let html = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0">';
+        html += '<thead class="table-light"><tr><th>Bahan</th><th class="text-end">Per Unit</th><th class="text-end">Total Butuh</th><th class="text-end">Stok</th><th class="text-center">Status</th></tr></thead><tbody>';
+        
+        let hasStockIssue = false;
+        let warnings = [];
+
+        produk.ingredients.forEach(ing => {
+            const needed = ing.jumlah_per_unit * jumlahProduk;
+            const available = ing.stok_tersedia;
+            const sufficient = available >= needed;
+            
+            if (!sufficient) {
+                hasStockIssue = true;
+                warnings.push(`<strong>${ing.nama}</strong>: butuh ${fmtNum(needed)} ${ing.satuan}, tersedia ${fmtNum(available)} ${ing.satuan}`);
+            }
+
+            html += `<tr class="${sufficient ? '' : 'table-danger'}">
+                <td><span class="badge bg-primary bg-opacity-10 text-primary me-1">${ing.kode}</span> ${ing.nama}</td>
+                <td class="text-end">${fmtNum(ing.jumlah_per_unit)} ${ing.satuan}</td>
+                <td class="text-end"><strong>${fmtNum(needed)} ${ing.satuan}</strong></td>
+                <td class="text-end">${fmtNum(available)} ${ing.satuan}</td>
+                <td class="text-center">
+                    ${sufficient 
+                        ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Cukup</span>' 
+                        : '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Kurang</span>'}
+                </td>
+            </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+        ingredientList.innerHTML = html;
+
+        if (hasStockIssue) {
+            stockWarning.style.display = 'block';
+            stockWarningList.innerHTML = warnings.join('<br>');
+            btnSubmit.disabled = true;
+        } else {
+            stockWarning.style.display = 'none';
+            btnSubmit.disabled = false;
+        }
+    }
+
+    // Form validation
+    document.getElementById('formBulkKeluar')?.addEventListener('submit', function(e) {
+        if (!jumlahProdukHidden.value || parseFloat(jumlahProdukHidden.value) < 1) {
+            e.preventDefault();
+            alert('Mohon isi jumlah unit produk minimal 1');
+            jumlahProdukDisplay.classList.add('is-invalid');
+        }
+    });
+});
 
 function setFilterType(type) {
     document.getElementById('formMonth').style.display = type === 'month' ? '' : 'none';
@@ -547,9 +777,9 @@ document.addEventListener('DOMContentLoaded', function() {
         openTambah();
     } else if (modalOpen === 'edit' && editId) {
         document.getElementById('editForm').action = '/stok-keluar/' + editId + '/update';
-        const sel = document.getElementById('e_barang_id');
+        const sel = document.getElementById('e_bahan_baku_id');
         for (let i = 0; i < sel.options.length; i++) {
-            if (sel.options[i].value == old.barang_id) { sel.selectedIndex = i; break; }
+            if (sel.options[i].value == old.bahan_baku_id) { sel.selectedIndex = i; break; }
         }
         const jd = document.getElementById('e_jumlah_display'), jh = document.getElementById('e_jumlah_hidden');
         if (old.jumlah) { jd.value = fmtNum(old.jumlah); jh.value = old.jumlah; }
@@ -559,7 +789,7 @@ document.addEventListener('DOMContentLoaded', function() {
         m.show();
         document.getElementById('modalEdit').addEventListener('shown.bs.modal', function() {
             initJumlah('e_jumlah_display', 'e_jumlah_hidden', 'e_jumlah_error', () => eMaxStok);
-            initStokInfo('e_barang_id', 'e_satuanText', 'e_satuanVal', 'e_stokVal', 'e_stokInfo', v => eMaxStok = v);
+            initStokInfo('e_bahan_baku_id', 'e_satuanText', 'e_satuanVal', 'e_stokVal', 'e_stokInfo', v => eMaxStok = v);
         }, { once: true });
     }
 

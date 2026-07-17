@@ -69,7 +69,6 @@ body {
 .sidebar-brand .brand-icon {
   width: 34px;
   height: 34px;
-  background: var(--primary);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -339,14 +338,12 @@ main {
 .login-brand-icon {
   width: 60px;
   height: 60px;
-  background: var(--primary-light);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1rem;
   font-size: 1.75rem;
-  color: var(--primary);
 }
 
 /* ── 404 ── */

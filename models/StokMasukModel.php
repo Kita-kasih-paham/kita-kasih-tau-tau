@@ -11,9 +11,9 @@ class StokMasukModel extends Model
     public function filter(string $from, string $to): array
     {
         $stmt = $this->db->prepare("
-            SELECT sm.*, b.nama_barang, b.kode_barang, b.satuan
+            SELECT sm.*, b.nama_bahan, b.kode_bahan, b.satuan
             FROM stok_masuk sm
-            JOIN barang b ON b.id = sm.barang_id
+            JOIN bahan_baku b ON b.id = sm.bahan_baku_id
             WHERE sm.tanggal BETWEEN ? AND ?
             ORDER BY sm.tanggal DESC, sm.id DESC
         ");
@@ -21,22 +21,22 @@ class StokMasukModel extends Model
         return $stmt->fetchAll();
     }
 
-    public function allWithBarang(): array
+    public function allWithBahanBaku(): array
     {
         return $this->db->query("
-            SELECT sm.*, b.nama_barang, b.kode_barang
+            SELECT sm.*, b.nama_bahan, b.kode_bahan, b.satuan
             FROM stok_masuk sm
-            JOIN barang b ON b.id = sm.barang_id
+            JOIN bahan_baku b ON b.id = sm.bahan_baku_id
             ORDER BY sm.tanggal DESC, sm.id DESC
         ")->fetchAll();
     }
 
-    public function findWithBarang(int $id): array|false
+    public function findWithBahanBaku(int $id): array|false
     {
         $stmt = $this->db->prepare("
-            SELECT sm.*, b.nama_barang, b.kode_barang
+            SELECT sm.*, b.nama_bahan, b.kode_bahan, b.satuan
             FROM stok_masuk sm
-            JOIN barang b ON b.id = sm.barang_id
+            JOIN bahan_baku b ON b.id = sm.bahan_baku_id
             WHERE sm.id = ?
         ");
         $stmt->execute([$id]);
@@ -46,9 +46,9 @@ class StokMasukModel extends Model
     public function recent(int $limit = 10): array
     {
         $stmt = $this->db->prepare("
-            SELECT sm.*, b.nama_barang, b.kode_barang
+            SELECT sm.*, b.nama_bahan, b.kode_bahan
             FROM stok_masuk sm
-            JOIN barang b ON b.id = sm.barang_id
+            JOIN bahan_baku b ON b.id = sm.bahan_baku_id
             ORDER BY sm.id DESC
             LIMIT ?
         ");
@@ -64,9 +64,9 @@ class StokMasukModel extends Model
     public function report(\DateTime $from, \DateTime $to): array
     {
         $stmt = $this->db->prepare("
-            SELECT sm.*, b.nama_barang, b.kode_barang
+            SELECT sm.*, b.nama_bahan, b.kode_bahan, sm.keterangan
             FROM stok_masuk sm
-            JOIN barang b ON b.id = sm.barang_id
+            JOIN bahan_baku b ON b.id = sm.bahan_baku_id
             WHERE sm.tanggal BETWEEN ? AND ?
             ORDER BY sm.tanggal DESC
         ");

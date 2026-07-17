@@ -110,6 +110,9 @@ ob_start();
         &nbsp;·&nbsp;
         Masuk: <strong style="color:#0e9f6e"><?= count($masuk) ?></strong> transaksi,
         Keluar: <strong style="color:#e02424"><?= count($keluar) ?></strong> transaksi
+        <?php if (!empty($produksi)): ?>
+            , Produksi: <strong style="color:#0284c7"><?= count($produksi) ?></strong> produk
+        <?php endif; ?>
     </p>
 
     <div class="row g-4">
@@ -128,7 +131,7 @@ ob_start();
                         <thead>
                             <tr>
                                 <th>Tanggal</th>
-                                <th>Barang</th>
+                                <th>Bahan</th>
                                 <th>Jumlah</th>
                             </tr>
                         </thead>
@@ -136,7 +139,7 @@ ob_start();
                             <?php foreach ($masuk as $row): ?>
                                 <tr>
                                     <td style="white-space:nowrap"><?= fmtDate($row['tanggal']) ?></td>
-                                    <td><?= htmlspecialchars($row['nama_barang']) ?></td>
+                                    <td><?= htmlspecialchars($row['nama_bahan']) ?></td>
                                     <td style="color:#0e9f6e;font-weight:600"><?= fmt($row['jumlah']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
@@ -169,7 +172,7 @@ ob_start();
                         <thead>
                             <tr>
                                 <th>Tanggal</th>
-                                <th>Barang</th>
+                                <th>Bahan</th>
                                 <th>Jumlah</th>
                             </tr>
                         </thead>
@@ -177,7 +180,7 @@ ob_start();
                             <?php foreach ($keluar as $row): ?>
                                 <tr>
                                     <td style="white-space:nowrap"><?= fmtDate($row['tanggal']) ?></td>
-                                    <td><?= htmlspecialchars($row['nama_barang']) ?></td>
+                                    <td><?= htmlspecialchars($row['nama_bahan']) ?></td>
                                     <td style="color:#e02424;font-weight:600"><?= fmt($row['jumlah']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
@@ -195,6 +198,63 @@ ob_start();
             </div>
         </div>
     </div>
+
+    <!-- Laporan Produksi -->
+    <?php if (!empty($produksi)): ?>
+        <div class="card mt-4">
+            <div class="card-header d-flex align-items-center gap-2" style="border-left:4px solid #0284c7">
+                <i class="bi bi-box-seam" style="color:#0284c7"></i>
+                <span>Laporan Produksi</span>
+                <span class="badge ms-auto" style="background:rgba(2,132,199,0.12);color:#0284c7">
+                    <?= count($produksi) ?> produk
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <table id="tblReportProduksi" class="table table-sm mb-0" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>Total Produksi</th>
+                            <th>Jumlah Hari</th>
+                            <th>Periode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($produksi as $row): ?>
+                            <tr>
+                                <td>
+                                    <strong><?= htmlspecialchars($row['nama_produk']) ?></strong>
+                                </td>
+                                <td style="color:#0284c7;font-weight:600">
+                                    <?= number_format($row['total_unit'], 0, ',', '.') ?> <span class="text-muted"
+                                        style="font-size:0.82rem">unit</span>
+                                </td>
+                                <td style="font-size:0.875rem">
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <?= $row['jumlah_hari_produksi'] ?> hari
+                                    </span>
+                                </td>
+                                <td style="font-size:0.82rem;color:#64748b">
+                                    <?= date('d/m', strtotime($row['tanggal_pertama'])) ?> -
+                                    <?= date('d/m', strtotime($row['tanggal_terakhir'])) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:#f8fafc;font-weight:600;font-size:0.82rem">
+                            <td class="text-end text-muted">Total</td>
+                            <td style="color:#0284c7">
+                                <?= number_format(array_sum(array_column($produksi, 'total_unit')), 0, ',', '.') ?> <span
+                                    class="text-muted">unit</span>
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    <?php endif; ?>
 
 <?php else: ?>
     <!-- No filter active state -->
@@ -260,6 +320,13 @@ ob_start();
             };
             $('#tblReportMasuk').DataTable(cfg);
             $('#tblReportKeluar').DataTable(cfg);
+
+            <?php if (!empty($produksi)): ?>
+                $('#tblReportProduksi').DataTable({
+                    ...cfg,
+                    order: [[1, 'desc']] // Sort by total produksi descending
+                });
+            <?php endif; ?>
         <?php endif; ?>
     });
 </script>

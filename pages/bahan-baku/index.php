@@ -13,34 +13,46 @@ ob_start();
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <span class="text-muted" style="font-size:0.85rem">Master data barang</span>
+    <span class="text-muted" style="font-size:0.85rem">Master data bahan baku</span>
     <button type="button" class="btn btn-primary btn-sm" onclick="openTambah()">
-        <i class="bi bi-plus-lg me-1"></i> Tambah Barang
+        <i class="bi bi-plus-lg me-1"></i> Tambah Bahan Baku
     </button>
 </div>
 
 <div class="card">
     <div class="card-body p-0">
-        <table id="tblBarang" class="table mb-0" style="width:100%">
+        <table id="tblBahanBaku" class="table mb-0" style="width:100%">
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Kode</th>
-                    <th>Nama Barang</th>
+                    <th>Nama Bahan Baku</th>
                     <th>Satuan</th>
+                    <th>Status</th>
                     <th>Keterangan</th>
-                    <th></th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($data as $i => $row): ?>
-                    <tr>
+                    <tr style="<?= $row['is_active'] ? '' : 'opacity:0.6;background:#f8f9fa' ?>">
                         <td class="text-muted"><?= $i + 1 ?></td>
                         <td><span
-                                class="badge bg-primary bg-opacity-10 text-primary"><?= htmlspecialchars($row['kode_barang']) ?></span>
+                                class="badge bg-primary bg-opacity-10 text-primary"><?= htmlspecialchars($row['kode_bahan']) ?></span>
                         </td>
-                        <td><?= htmlspecialchars($row['nama_barang']) ?></td>
+                        <td><?= htmlspecialchars($row['nama_bahan']) ?></td>
                         <td><?= htmlspecialchars($row['satuan']) ?></td>
+                        <td>
+                            <?php if ($row['is_active']): ?>
+                                <span class="badge" style="background:#10b981;color:white">
+                                    <i class="bi bi-check-circle me-1"></i>Aktif
+                                </span>
+                            <?php else: ?>
+                                <span class="badge" style="background:#6b7280;color:white">
+                                    <i class="bi bi-x-circle me-1"></i>Tidak Aktif
+                                </span>
+                            <?php endif; ?>
+                        </td>
                         <td class="text-muted">
                             <?= $row['keterangan'] ? htmlspecialchars($row['keterangan']) : '<span class="text-muted" style="font-size:0.78rem">—</span>' ?>
                         </td>
@@ -48,15 +60,25 @@ ob_start();
                             <div class="d-flex gap-1">
                                 <button type="button" class="btn btn-sm"
                                     style="color:#0f6cbd;background:rgba(15,108,189,0.08);border:none"
-                                    onclick="openEdit(<?= $row['id'] ?>, <?= htmlspecialchars(json_encode($row), ENT_QUOTES) ?>)">
+                                    onclick="openEdit(<?= $row['id'] ?>, <?= htmlspecialchars(json_encode($row), ENT_QUOTES) ?>)"
+                                    title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form id="del-barang-<?= $row['id'] ?>" action="/barang/<?= $row['id'] ?>/delete"
+                                <form id="toggle-<?= $row['id'] ?>" action="/bahan-baku/<?= $row['id'] ?>/toggle-active"
+                                    method="POST" style="display:inline">
+                                    <button type="submit" class="btn btn-sm"
+                                        style="color:<?= $row['is_active'] ? '#f59e0b' : '#10b981' ?>;background:rgba(<?= $row['is_active'] ? '245,158,11' : '16,185,129' ?>,0.08);border:none"
+                                        title="<?= $row['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?>">
+                                        <i class="bi bi-<?= $row['is_active'] ? 'toggle-on' : 'toggle-off' ?>"></i>
+                                    </button>
+                                </form>
+                                <form id="del-bahan-baku-<?= $row['id'] ?>" action="/bahan-baku/<?= $row['id'] ?>/delete"
                                     method="POST">
                                     <button type="button" class="btn btn-sm"
                                         style="color:#e02424;background:rgba(224,36,36,0.08);border:none"
-                                        onclick="confirmDelete(this)" data-form="del-barang-<?= $row['id'] ?>"
-                                        data-message="Barang &quot;<?= htmlspecialchars($row['nama_barang']) ?>&quot; akan dihapus permanen.">
+                                        onclick="confirmDelete(this)" data-form="del-bahan-baku-<?= $row['id'] ?>"
+                                        data-message="Bahan baku &quot;<?= htmlspecialchars($row['nama_bahan']) ?>&quot; akan dihapus permanen."
+                                        title="Hapus">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -75,35 +97,35 @@ ob_start();
         <div class="modal-content border-0 shadow">
             <div class="modal-header" style="border-bottom:1px solid #f0f0f0">
                 <h5 class="modal-title" id="modalTambahLabel">
-                    <i class="bi bi-box-seam me-2 text-primary"></i>Tambah Barang
+                    <i class="bi bi-box-seam me-2 text-primary"></i>Tambah Bahan Baku
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/barang" method="POST">
+            <form action="/bahan-baku" method="POST">
                 <div class="modal-body p-4">
 
                     <div class="mb-3">
-                        <label class="form-label">Kode Barang</label>
-                        <input type="text" name="kode_barang" id="t_kode_barang"
-                            class="form-control <?= ($modalOpen === 'tambah' && isset($errors['kode_barang'])) ? 'is-invalid' : '' ?>"
-                            value="<?= ($modalOpen === 'tambah') ? htmlspecialchars($old['kode_barang'] ?? '') : '' ?>"
-                            placeholder="Contoh: BRG001" style="text-transform:uppercase" autocomplete="off"
+                        <label class="form-label">Kode Bahan Baku</label>
+                        <input type="text" name="kode_bahan" id="t_kode_bahan"
+                            class="form-control <?= ($modalOpen === 'tambah' && isset($errors['kode_bahan'])) ? 'is-invalid' : '' ?>"
+                            value="<?= ($modalOpen === 'tambah') ? htmlspecialchars($old['kode_bahan'] ?? '') : '' ?>"
+                            placeholder="Contoh: BAHAN001" style="text-transform:uppercase" autocomplete="off"
                             minlength="4" required>
-                        <?php if ($modalOpen === 'tambah' && isset($errors['kode_barang'])): ?>
-                            <div class="invalid-feedback"><?= $errors['kode_barang'][0] ?></div>
+                        <?php if ($modalOpen === 'tambah' && isset($errors['kode_bahan'])): ?>
+                            <div class="invalid-feedback"><?= $errors['kode_bahan'][0] ?></div>
                         <?php else: ?>
                             <div class="form-text"><i class="bi bi-info-circle me-1"></i>Minimal 4 karakter.</div>
                         <?php endif; ?>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Nama Barang</label>
-                        <input type="text" name="nama_barang"
-                            class="form-control <?= ($modalOpen === 'tambah' && isset($errors['nama_barang'])) ? 'is-invalid' : '' ?>"
-                            value="<?= ($modalOpen === 'tambah') ? htmlspecialchars($old['nama_barang'] ?? '') : '' ?>"
-                            placeholder="Masukkan nama barang..." autocomplete="off" required>
-                        <?php if ($modalOpen === 'tambah' && isset($errors['nama_barang'])): ?>
-                            <div class="invalid-feedback"><?= $errors['nama_barang'][0] ?></div>
+                        <label class="form-label">Nama Bahan Baku</label>
+                        <input type="text" name="nama_bahan"
+                            class="form-control <?= ($modalOpen === 'tambah' && isset($errors['nama_bahan'])) ? 'is-invalid' : '' ?>"
+                            value="<?= ($modalOpen === 'tambah') ? htmlspecialchars($old['nama_bahan'] ?? '') : '' ?>"
+                            placeholder="Contoh: Biji Kopi, Gula Pasir, Susu dll" autocomplete="off" required>
+                        <?php if ($modalOpen === 'tambah' && isset($errors['nama_bahan'])): ?>
+                            <div class="invalid-feedback"><?= $errors['nama_bahan'][0] ?></div>
                         <?php endif; ?>
                     </div>
 
@@ -146,7 +168,7 @@ ob_start();
         <div class="modal-content border-0 shadow">
             <div class="modal-header" style="border-bottom:1px solid #f0f0f0">
                 <h5 class="modal-title" id="modalEditLabel">
-                    <i class="bi bi-pencil-square me-2 text-primary"></i>Edit Barang
+                    <i class="bi bi-pencil-square me-2 text-primary"></i>Edit Bahan Baku
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -154,26 +176,27 @@ ob_start();
                 <div class="modal-body p-4">
 
                     <div class="mb-3">
-                        <label class="form-label">Kode Barang</label>
-                        <input type="text" name="kode_barang" id="e_kode_barang"
-                            class="form-control <?= ($modalOpen === 'edit' && isset($errors['kode_barang'])) ? 'is-invalid' : '' ?>"
-                            value="<?= ($modalOpen === 'edit') ? htmlspecialchars($old['kode_barang'] ?? '') : '' ?>"
-                            placeholder="Contoh: BRG001" style="text-transform:uppercase" autocomplete="off" minlength="4" required>
-                        <?php if ($modalOpen === 'edit' && isset($errors['kode_barang'])): ?>
-                            <div class="invalid-feedback"><?= $errors['kode_barang'][0] ?></div>
+                        <label class="form-label">Kode Bahan Baku</label>
+                        <input type="text" name="kode_bahan" id="e_kode_bahan"
+                            class="form-control <?= ($modalOpen === 'edit' && isset($errors['kode_bahan'])) ? 'is-invalid' : '' ?>"
+                            value="<?= ($modalOpen === 'edit') ? htmlspecialchars($old['kode_bahan'] ?? '') : '' ?>"
+                            placeholder="Contoh: BAHAN001" style="text-transform:uppercase" autocomplete="off"
+                            minlength="4" required>
+                        <?php if ($modalOpen === 'edit' && isset($errors['kode_bahan'])): ?>
+                            <div class="invalid-feedback"><?= $errors['kode_bahan'][0] ?></div>
                         <?php else: ?>
                             <div class="form-text"><i class="bi bi-info-circle me-1"></i>Minimal 4 karakter.</div>
                         <?php endif; ?>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Nama Barang</label>
-                        <input type="text" name="nama_barang" id="e_nama_barang"
-                            class="form-control <?= ($modalOpen === 'edit' && isset($errors['nama_barang'])) ? 'is-invalid' : '' ?>"
-                            value="<?= ($modalOpen === 'edit') ? htmlspecialchars($old['nama_barang'] ?? '') : '' ?>"
-                            placeholder="Masukkan nama barang..." autocomplete="off" required>
-                        <?php if ($modalOpen === 'edit' && isset($errors['nama_barang'])): ?>
-                            <div class="invalid-feedback"><?= $errors['nama_barang'][0] ?></div>
+                        <label class="form-label">Nama Bahan Baku</label>
+                        <input type="text" name="nama_bahan" id="e_nama_bahan"
+                            class="form-control <?= ($modalOpen === 'edit' && isset($errors['nama_bahan'])) ? 'is-invalid' : '' ?>"
+                            value="<?= ($modalOpen === 'edit') ? htmlspecialchars($old['nama_bahan'] ?? '') : '' ?>"
+                            placeholder="Contoh: Biji Kopi, Gula Pasir, Susu, dll" autocomplete="off" required>
+                        <?php if ($modalOpen === 'edit' && isset($errors['nama_bahan'])): ?>
+                            <div class="invalid-feedback"><?= $errors['nama_bahan'][0] ?></div>
                         <?php endif; ?>
                     </div>
 
@@ -280,9 +303,9 @@ ob_start();
 
     // ── Open Edit modal ─────────────────────────────────────────
     function openEdit(id, row) {
-        document.getElementById('editForm').action = '/barang/' + id + '/update';
-        document.getElementById('e_kode_barang').value = row.kode_barang;
-        document.getElementById('e_nama_barang').value = row.nama_barang;
+        document.getElementById('editForm').action = '/bahan-baku/' + id + '/update';
+        document.getElementById('e_kode_bahan').value = row.kode_bahan;
+        document.getElementById('e_nama_bahan').value = row.nama_bahan;
         document.getElementById('e_satuan').value = row.satuan;
         document.getElementById('e_keterangan').value = row.keterangan ?? '';
         const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
@@ -303,9 +326,9 @@ ob_start();
             // Find the row data from the table to pre-fill, then overlay old POST values
             const old = <?= json_encode($old) ?>;
             // Manually trigger via old POST data (no table lookup needed)
-            document.getElementById('editForm').action = '/barang/' + editId + '/update';
-            document.getElementById('e_kode_barang').value = old.kode_barang ?? '';
-            document.getElementById('e_nama_barang').value = old.nama_barang ?? '';
+            document.getElementById('editForm').action = '/bahan-baku/' + editId + '/update';
+            document.getElementById('e_kode_bahan').value = old.kode_bahan ?? '';
+            document.getElementById('e_nama_bahan').value = old.nama_bahan ?? '';
             document.getElementById('e_satuan').value = old.satuan ?? '';
             document.getElementById('e_keterangan').value = old.keterangan ?? '';
             const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
@@ -316,7 +339,7 @@ ob_start();
         }
 
         // DataTable
-        $('#tblBarang').DataTable({
+        $('#tblBahanBaku').DataTable({
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50],
             language: {
@@ -335,4 +358,4 @@ ob_start();
 </script>
 
 <?php $content = ob_get_clean();
-renderLayout('Data Barang', $content); ?>
+renderLayout('Bahan Baku', $content); ?>

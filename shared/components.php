@@ -3,7 +3,7 @@
 function renderHead(string $title = ''): void
 {
     $appName = APP_NAME;
-    $pageTitle = $title ? "$title — $appName" : $appName;
+    $pageTitle = $title;
     echo <<<HTML
     <!DOCTYPE html>
     <html lang="id">
@@ -11,6 +11,8 @@ function renderHead(string $title = ''): void
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{$pageTitle}</title>
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+        <link rel="apple-touch-icon" href="/assets/icons.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -26,24 +28,46 @@ function renderHead(string $title = ''): void
 function renderSidebar(): void
 {
     $current = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    $nav = [
+    $userRole = $_SESSION['user']['role'] ?? 'karyawan';
+    $isAdmin = $userRole === 'admin';
+
+    // Menu untuk admin (semua menu)
+    $adminNav = [
         ['href' => '/dashboard', 'icon' => 'bi-speedometer2', 'label' => 'Dashboard'],
-        ['href' => '/barang', 'icon' => 'bi-box-seam', 'label' => 'Data Barang'],
+        ['href' => '/bahan-baku', 'icon' => 'bi-box-seam', 'label' => 'Bahan Baku'],
+        ['href' => '/produk', 'icon' => 'bi-grid-3x3-gap', 'label' => 'Produk'],
         ['href' => '/stok-masuk', 'icon' => 'bi-box-arrow-in-down', 'label' => 'Stok Masuk'],
         ['href' => '/stok-keluar', 'icon' => 'bi-box-arrow-up', 'label' => 'Stok Keluar'],
         ['href' => '/stok-tersedia', 'icon' => 'bi-clipboard-data', 'label' => 'Stok Tersedia'],
         ['href' => '/report', 'icon' => 'bi-file-earmark-bar-graph', 'label' => 'Report'],
     ];
 
+    // Menu untuk karyawan (hanya stok keluar)
+    $karyawanNav = [
+        ['href' => '/stok-keluar', 'icon' => 'bi-box-arrow-up', 'label' => 'Stok Keluar'],
+    ];
+
+    $nav = $isAdmin ? $adminNav : $karyawanNav;
+
     $user = $_SESSION['user']['username'] ?? 'User';
-    $initial = strtoupper(substr($user, 0, 1));
+    $namaLengkap = $_SESSION['user']['nama_lengkap'] ?? $user;
+    $roleBadge = $isAdmin
+        ? '<span class="badge bg-danger ms-2" style="font-size:0.65rem;font-weight:600">Admin</span>'
+        : '<span class="badge bg-secondary ms-2" style="font-size:0.65rem;font-weight:600">Karyawan</span>';
 
     echo '<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>';
     echo '<aside class="sidebar" id="sidebar">';
     echo '<div class="sidebar-brand">';
-    echo '<div class="brand-icon"><i class="bi bi-box-seam"></i></div>';
-    echo '<span>Barang</span>';
+    echo '<div class="brand-icon"><img src="/assets/favicon.svg" alt="Logo" style="width:32px;height:32px"></div>';
+    echo '<span>Kala</span>';
     echo '</div>';
+
+    // User info section
+    echo '<div style="padding:0.75rem 1rem;margin:0.5rem 0;background:rgba(255,255,255,0.05);border-radius:8px">';
+    echo '<div style="font-size:0.75rem;color:rgba(255,255,255,0.6);margin-bottom:0.2rem">Login sebagai</div>';
+    echo '<div style="font-size:0.9rem;font-weight:600;color:#fff">' . htmlspecialchars($namaLengkap) . $roleBadge . '</div>';
+    echo '</div>';
+
     echo '<div class="sidebar-section">Menu</div>';
     echo '<nav class="sidebar-nav">';
     foreach ($nav as $item) {
@@ -51,6 +75,14 @@ function renderSidebar(): void
         echo "<a href=\"{$item['href']}\" class=\"nav-link {$active}\"><i class=\"bi {$item['icon']}\"></i> {$item['label']}</a>";
     }
     echo '</nav>';
+
+    // Admin only: User management menu
+    if ($isAdmin) {
+        echo '<div class="sidebar-section">Admin</div>';
+        $usersActive = str_starts_with($current, '/users') ? 'active' : '';
+        echo "<a href=\"/users\" class=\"nav-link {$usersActive}\"><i class=\"bi bi-people\"></i> Manajemen User</a>";
+    }
+
     echo '<div class="sidebar-section">Akun</div>';
     $profileActive = str_starts_with($current, '/profile') ? 'active' : '';
     echo "<a href=\"/profile\" class=\"nav-link {$profileActive}\"><i class=\"bi bi-person-gear\"></i> Ganti Password</a>";
@@ -63,7 +95,12 @@ function renderSidebar(): void
 function renderTopbar(string $title): void
 {
     $user = $_SESSION['user']['username'] ?? 'User';
-    $initial = strtoupper(substr($user, 0, 1));
+    $namaLengkap = $_SESSION['user']['nama_lengkap'] ?? $user;
+    $role = $_SESSION['user']['role'] ?? 'karyawan';
+    $roleName = $role === 'admin' ? 'Admin' : 'Karyawan';
+    $roleColor = $role === 'admin' ? '#dc2626' : '#6b7280';
+    $initial = strtoupper(substr($namaLengkap, 0, 1));
+
     echo <<<HTML
     <header class="topbar">
         <div class="d-flex align-items-center">
@@ -79,7 +116,10 @@ function renderTopbar(string $title): void
                  onmouseover="this.style.background='rgba(255,255,255,0.08)'"
                  onmouseout="this.style.background='transparent'">
                 <div class="avatar">{$initial}</div>
-                <span class="d-none d-sm-inline">{$user}</span>
+                <div class="d-none d-sm-block" style="line-height:1.3;text-align:left">
+                    <div style="font-size:0.875rem;font-weight:600">{$namaLengkap}</div>
+                    <div style="font-size:0.7rem;opacity:0.7;margin-top:-1px">{$roleName}</div>
+                </div>
                 <i class="bi bi-chevron-down d-none d-sm-inline" style="font-size:0.7rem;opacity:0.7;transition:transform 0.2s" id="userChevron"></i>
             </div>
 
@@ -87,11 +127,14 @@ function renderTopbar(string $title): void
             <div id="userDropdown"
                  style="display:none;position:absolute;top:calc(100% + 8px);right:0;
                         background:#fff;border:1px solid #e5e7eb;border-radius:10px;
-                        box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:180px;z-index:9999;overflow:hidden">
+                        box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:200px;z-index:9999;overflow:hidden">
                 <!-- User info header -->
                 <div style="padding:0.75rem 1rem;background:#f8fafc;border-bottom:1px solid #e5e7eb">
                     <div style="font-size:0.7rem;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Login sebagai</div>
-                    <div style="font-weight:600;color:#1f2937;font-size:0.9rem;margin-top:0.1rem">{$user}</div>
+                    <div style="font-weight:600;color:#1f2937;font-size:0.9rem;margin-top:0.1rem">{$namaLengkap}</div>
+                    <div style="font-size:0.75rem;color:{$roleColor};margin-top:0.2rem;font-weight:600">
+                        <i class="bi bi-shield-fill-check"></i> {$roleName}
+                    </div>
                 </div>
                 <!-- Menu items -->
                 <div style="padding:0.375rem 0">
@@ -127,14 +170,21 @@ function renderFlashToast(): void
 
     $type = $success ? 'success' : 'danger';
     $icon = $success ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
-    $message = htmlspecialchars($success ?? $error);
+
+    // For success, escape HTML. For errors, allow HTML for detailed messages
+    if ($success) {
+        $message = htmlspecialchars($success);
+    } else {
+        $message = $error; // Allow HTML in error messages
+    }
 
     echo <<<HTML
     <div id="flashToast" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
-        <div class="toast show align-items-center text-bg-{$type} border-0 shadow" role="alert">
+        <div class="toast show align-items-center text-bg-{$type} border-0 shadow" role="alert" style="max-width:500px">
             <div class="d-flex">
-                <div class="toast-body d-flex align-items-center gap-2">
-                    <i class="bi {$icon}"></i> {$message}
+                <div class="toast-body d-flex align-items-start gap-2">
+                    <i class="bi {$icon} mt-1"></i> 
+                    <div>{$message}</div>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto"
                         data-bs-dismiss="toast" aria-label="Close"></button>
